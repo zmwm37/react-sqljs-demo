@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.1.1",
-    "react-app-rewired": "^2.1.5",
+    "react-app-rewired": "^2.1.8",
     "typescript": "3.3.3"
   },
   "scripts": {

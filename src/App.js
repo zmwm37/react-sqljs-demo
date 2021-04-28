@@ -14,15 +14,21 @@ export default class App extends React.Component {
     // sql.js needs to fetch its wasm file, so we cannot immediately instantiate the database
     // without any configuration, initSqlJs will fetch the wasm files directly from the same path as the js
     // see ../config-overrides.js
-    initSqlJs()
-      .then(SQL => this.setState({ db: new SQL.Database() }))
-      .catch(err => this.setState({ err }));
+    const me = this;
+    Promise.all([initSqlJs(), fetch('./z_test.db')]).then(async res => {
+      const SQLite = res[0], dbStorage = res[1];
+      const db = new SQLite.Database(new Uint8Array(await dbStorage.arrayBuffer()));
+
+      me.setState({db: db});
+    }).catch(err => {
+      me.setState({err});
+    });
   }
 
   exec(sql) {
     let results = null, err = null;
     try {
-      // The sql is executed synchronously on the UI thread. 
+      // The sql is executed synchronously on the UI thread.
       // You may want to use a web worker
       results = this.state.db.exec(sql); // an array of objects is returned
     } catch (e) {
@@ -30,6 +36,8 @@ export default class App extends React.Component {
       err = e
     }
     this.setState({ results, err })
+    console.log('results')
+    console.log(results)
   }
 
   /**
@@ -70,7 +78,8 @@ export default class App extends React.Component {
         <textarea
           onChange={e => this.exec(e.target.value)}
           placeholder="Enter some SQL. No inspiration ? Try “select sqlite_version()”"
-        ></textarea>
+          defaultValue="SELECT * FROM table1"
+        />
 
         <pre className="error">{(err || "").toString()}</pre>
 
